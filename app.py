@@ -47,13 +47,14 @@ if st.session_state.produtos:
     df["R$/g Proteína"] = (df["Preço (R$)"] / df["Proteína total (g)"]).round(2)
     df["R$/dose"] = (df["Preço (R$)"] / df["Nº de doses"]).round(2)
 
-    # Exibir cards individuais
+    # Exibir cards individuais (com fundo escuro)
     st.markdown("### 🏷️ Produtos adicionados")
     for _, row in df.iterrows():
         st.markdown(
             f"""
-            <div style="background:#f0f2f6; padding:15px; border-radius:12px; margin-bottom:10px; box-shadow: 1px 1px 5px rgba(0,0,0,0.1);">
-                <h4>{row['Produto']}</h4>
+            <div style="background:#1e1e1e; color:#f5f5f5; padding:15px; border-radius:12px; 
+                        margin-bottom:10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.6);">
+                <h4 style="margin:0; color:#FFD700;">{row['Produto']}</h4>
                 <ul>
                     <li><b>Peso total:</b> {row['Peso total (g)']} g</li>
                     <li><b>Dose:</b> {row['Dose (g)']} g</li>
