@@ -74,6 +74,52 @@ if produtos:
     df["R$/dose (30g)"] = df["Preço (R$)"] / df["Nº de doses (30g ref)"]
     df["R$/g proteína (30g ref)"] = df["R$/dose (30g)"] / df["Proteína ajustada (30g)"]
 
+    if produtos:
+    df = pd.DataFrame(produtos)
+
+    # Dose de referência
+    dose_ref = 30  
+
+    # Cálculos
+    df["Nº de doses declaradas"] = (df["Peso total (g)"] / df["Dose declarada (g)"]).astype(int)
+    df["Proteína ajustada (30g)"] = (df["Proteína declarada (g)"] / df["Dose declarada (g)"]) * dose_ref
+    df["Nº de doses (30g ref)"] = (df["Peso total (g)"] / dose_ref).astype(int)
+
+    df["R$/dose (30g)"] = df["Preço (R$)"] / df["Nº de doses (30g ref)"]
+    df["R$/g proteína (30g ref)"] = df["R$/dose (30g)"] / df["Proteína ajustada (30g)"]
+
+    # 🏆 Identificar o melhor custo-benefício
+    melhor = df.loc[df["R$/g proteína (30g ref)"].idxmin()]
+    segundo = df.nsmallest(2, "R$/g proteína (30g ref)").iloc[1] if len(df) > 1 else None
+
+    st.markdown("## 🏁 Resultado Final")
+    st.success(
+        f"💪 O melhor custo-benefício é o **{melhor['Produto']}**, "
+        f"custando apenas **R$ {melhor['R$/g proteína (30g ref)']:.2f} por grama de proteína (30g ref)**."
+    )
+
+    if segundo is not None:
+        st.info(
+            f"🥈 Em segundo lugar vem **{segundo['Produto']}**, "
+            f"com **R$ {segundo['R$/g proteína (30g ref)']:.2f}/g**."
+        )
+
+    st.markdown("## 📊 Resultados Comparativos")
+    st.dataframe(
+        df[[ 
+            "Produto",
+            "Nº de doses (30g ref)",
+            "Proteína ajustada (30g)",
+            "R$/dose (30g)",
+            "R$/g proteína (30g ref)"
+        ]].style.format({
+            "Proteína ajustada (30g)": "{:.1f} g",
+            "R$/dose (30g)": "R$ {:.2f}",
+            "R$/g proteína (30g ref)": "R$ {:.2f}"
+        })
+    )
+
+    
     st.markdown("## 📊 Resultados Comparativos")
     st.dataframe(
         df[[
