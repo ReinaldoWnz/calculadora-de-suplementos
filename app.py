@@ -34,13 +34,11 @@ st.markdown(
 )
 
 st.title("💪 Calculadora de Custo-Benefício do Whey Protein")
-st.markdown("Compare suplementos de forma **justa** usando 30g como dose de referência. 🥛💥")
+st.markdown("Compare suplementos de forma **justa e prática** — considerando **30g como dose padrão** e o **valor total de proteína por pote**. 🥛💥")
 
-# Lista de produtos
+# Entrada de produtos
 produtos = []
-
 qtd = st.slider("Quantos produtos deseja comparar?", min_value=1, max_value=6, value=2)
-
 cols = st.columns(qtd)
 
 for i in range(qtd):
@@ -63,72 +61,67 @@ for i in range(qtd):
 if produtos:
     df = pd.DataFrame(produtos)
 
-    # Dose de referência
-    dose_ref = 30  
+    dose_ref = 30  # padronização para 30g
 
-    # Cálculos
+    # Cálculos principais
     df["Nº de doses declaradas"] = (df["Peso total (g)"] / df["Dose declarada (g)"]).astype(int)
     df["Proteína ajustada (30g)"] = (df["Proteína declarada (g)"] / df["Dose declarada (g)"]) * dose_ref
     df["Nº de doses (30g ref)"] = (df["Peso total (g)"] / dose_ref).astype(int)
 
+    # --- MÉTRICAS ---
     df["R$/dose (30g)"] = df["Preço (R$)"] / df["Nº de doses (30g ref)"]
     df["R$/g proteína (30g ref)"] = df["R$/dose (30g)"] / df["Proteína ajustada (30g)"]
 
-    if produtos:
-        df = pd.DataFrame(produtos)
-    
-        # Dose de referência
-        dose_ref = 30  
-    
-        # Cálculos
-        df["Nº de doses declaradas"] = (df["Peso total (g)"] / df["Dose declarada (g)"]).astype(int)
-        df["Proteína ajustada (30g)"] = (df["Proteína declarada (g)"] / df["Dose declarada (g)"]) * dose_ref
-        df["Nº de doses (30g ref)"] = (df["Peso total (g)"] / dose_ref).astype(int)
-    
-        df["R$/dose (30g)"] = df["Preço (R$)"] / df["Nº de doses (30g ref)"]
-        df["R$/g proteína (30g ref)"] = df["R$/dose (30g)"] / df["Proteína ajustada (30g)"]
-    
-        # 🏆 Identificar o melhor custo-benefício
-        melhor = df.loc[df["R$/g proteína (30g ref)"].idxmin()]
-        segundo = df.nsmallest(2, "R$/g proteína (30g ref)").iloc[1] if len(df) > 1 else None
-    
-        st.markdown("## 🏁 Resultado Final")
-        st.success(
-            f"💪 O melhor custo-benefício é o **{melhor['Produto']}**, "
-            f"custando apenas **R$ {melhor['R$/g proteína (30g ref)']:.2f} por grama de proteína (30g ref)**."
-        )
+    # Proteína total e custo real por pote
+    df["Proteína total no pote (g)"] = (df["Peso total (g)"] / df["Dose declarada (g)"]) * df["Proteína declarada (g)"]
+    df["R$/g proteína total"] = df["Preço (R$)"] / df["Proteína total no pote (g)"]
 
-    if segundo is not None:
-        st.info(
-            f"🥈 Em segundo lugar vem **{segundo['Produto']}**, "
-            f"com **R$ {segundo['R$/g proteína (30g ref)']:.2f}/g**."
-        )
+    # --- RANKINGS ---
+    melhor_dose = df.loc[df["R$/g proteína (30g ref)"].idxmin()]
+    melhor_total = df.loc[df["R$/g proteína total"].idxmin()]
 
+    st.markdown("## 🏁 Resultado Final")
+
+    st.success(
+        f"💪 **Melhor custo-benefício técnico (30g ref):** {melhor_dose['Produto']} — "
+        f"R$ {melhor_dose['R$/g proteína (30g ref)']:.2f}/g de proteína."
+    )
+
+    st.info(
+        f"🧴 **Melhor custo-benefício real (pote inteiro):** {melhor_total['Produto']} — "
+        f"R$ {melhor_total['R$/g proteína total']:.2f}/g considerando toda a proteína do refil."
+    )
+
+    # --- TABELA COMPARATIVA ---
     st.markdown("## 📊 Resultados Comparativos")
     st.dataframe(
-        df[[ 
+        df[[
             "Produto",
             "Nº de doses (30g ref)",
             "Proteína ajustada (30g)",
             "R$/dose (30g)",
-            "R$/g proteína (30g ref)"
+            "R$/g proteína (30g ref)",
+            "Proteína total no pote (g)",
+            "R$/g proteína total"
         ]].style.format({
             "Proteína ajustada (30g)": "{:.1f} g",
             "R$/dose (30g)": "R$ {:.2f}",
-            "R$/g proteína (30g ref)": "R$ {:.2f}"
+            "R$/g proteína (30g ref)": "R$ {:.2f}",
+            "Proteína total no pote (g)": "{:.0f} g",
+            "R$/g proteína total": "R$ {:.2f}"
         })
     )
 
-    # Gráfico comparativo
+    # --- GRÁFICO COMPARATIVO ---
     st.markdown("## 📉 Visualização")
     fig = px.bar(
         df,
         x="Produto",
-        y="R$/g proteína (30g ref)",
-        text=df["R$/g proteína (30g ref)"].map("R$ {:.2f}".format),
+        y="R$/g proteína total",
+        text=df["R$/g proteína total"].map("R$ {:.2f}".format),
         color="Produto",
         color_discrete_sequence=px.colors.sequential.Viridis,
-        title="💸 Custo por grama de proteína (30g de whey)",
+        title="💸 Custo por grama de proteína total (pote inteiro)",
     )
     fig.update_traces(textposition="outside")
     fig.update_layout(
