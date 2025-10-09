@@ -119,22 +119,6 @@ if produtos:
         })
     )
 
-    
-    st.markdown("## 📊 Resultados Comparativos")
-    st.dataframe(
-        df[[
-            "Produto",
-            "Nº de doses (30g ref)",
-            "Proteína ajustada (30g)",
-            "R$/dose (30g)",
-            "R$/g proteína (30g ref)"
-        ]].style.format({
-            "Proteína ajustada (30g)": "{:.1f} g",
-            "R$/dose (30g)": "R$ {:.2f}",
-            "R$/g proteína (30g ref)": "R$ {:.2f}"
-        })
-    )
-
     # Gráfico comparativo
     st.markdown("## 📉 Visualização")
     fig = px.bar(
